@@ -26,19 +26,36 @@ class RouteRequest(BaseModel):
 class PathSegment(BaseModel):
     """One segment of the returned route with safety metadata."""
     coordinates: list[Coordinate]
-    centroid_id: int = Field(..., description="H3 hex cell this segment crosses")
+    centroid_id: str = Field(..., description="H3 hex cell this segment crosses")
     segment_safety: float = Field(..., ge=0.0, le=1.0)
     distance_m: float
+
+
+class PathSummary(BaseModel):
+    """Summary of a single candidate route."""
+    coordinates: list[Coordinate] = Field(default_factory=list)
+    total_distance_m: float = 0.0
+    avg_safety_score: float = 0.0
+    node_count: int = 0
 
 
 class RouteResponse(BaseModel):
     """Response from POST /route."""
     status: str
     message: str | None = None
-    path_segments: list[PathSegment] = []
-    total_distance_km: float = 0.0
-    total_safety_score: float = 0.0
+    safest_path: PathSummary = Field(
+        default_factory=PathSummary,
+        description="Recommended route: highest S_total within 1.25x distance budget",
+    )
+    fastest_path: PathSummary = Field(
+        default_factory=PathSummary,
+        description="Shortest distance route for comparison",
+    )
     detour_factor: float | None = Field(
         None,
-        description="Ratio of chosen path distance to shortest path distance",
+        description="Ratio of safest path distance to fastest path distance",
     )
+    candidates_evaluated: int = 0
+    candidates_within_budget: int = 0
+    demographic: str | None = None
+    m_demo: float | None = None
