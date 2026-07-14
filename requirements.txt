@@ -17,6 +17,7 @@ streamlit-folium>=0.22.0
 folium>=0.17.0
 
 # ── Geospatial & Routing (§3, §2A) ─────────────────────
+geopy>=2.4.0
 osmnx>=2.0.0
 networkx>=3.3
 h3>=4.1.0
