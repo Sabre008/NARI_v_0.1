@@ -1,0 +1,48 @@
+# ── N.A.R.I  —  Navigation Aiding Reinforced Informatics ──
+# Python >= 3.10
+
+# ── Core Framework ──────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.8.0
+pydantic-settings>=2.4.0
+python-dotenv>=1.0.0
+ipykernel
+matplotlib
+seaborn
+
+# ── Streamlit Frontend ──────────────────────────────────
+streamlit>=1.38.0
+streamlit-folium>=0.22.0
+folium>=0.17.0
+
+# ── Geospatial & Routing (§3, §2A) ─────────────────────
+osmnx>=2.0.0
+networkx>=3.3
+h3>=4.1.0
+shapely>=2.0.0
+geopandas>=1.0.0
+
+# ── Deep Learning — Safety DNN (§2A) ───────────────────
+torch>=2.3.0
+scikit-learn>=1.5.0
+numpy>=1.26.0
+pandas>=2.2.0
+
+# ── NLP — Hazard Extraction (§2B) ──────────────────────
+transformers>=4.44.0
+feedparser>=6.0.0
+requests>=2.32.0
+
+# ── Trust Engine — Anomaly Detection (§2C) ──────────────
+# scikit-learn (listed above) provides IsolationForest
+
+# ── Database — Supabase (§4) ───────────────────────────
+supabase>=2.7.0
+
+# ── Testing ─────────────────────────────────────────────
+pytest>=8.3.0
+httpx>=0.27.0
+
+# ── Utilities ───────────────────────────────────────────
+python-dateutil>=2.9.0

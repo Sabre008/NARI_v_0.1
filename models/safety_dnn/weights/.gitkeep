@@ -1,0 +1,3 @@
+# Placeholder — trained model weights are saved here.
+# This file ensures the weights/ directory is tracked by git.
+# Actual .pth files are listed in .gitignore.

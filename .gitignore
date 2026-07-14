@@ -1,0 +1,47 @@
+# ── Environment ─────────────────────────
+.env
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual Environment ────────────────
+venv/
+.venv/
+env/
+testvenv/
+
+# ── IDE ─────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Model Weights (large binaries) ─────
+models/safety_dnn/weights/*.pth
+models/trust_engine/*.joblib
+
+# ── Jupyter ─────────────────────────────
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+notebooks/cache
+
+# ── OS ──────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Data artifacts ──────────────────────
+*.csv
+*.parquet
+data/patna_road_graph.graphml
+data/patna_h3_grid_features.csv
+data/patna_synthetic_training_data.csv
+!data/migrations/*.sql
+
+# ── Notebook Cache ──
+notebooks/cache/
+*.bkp
