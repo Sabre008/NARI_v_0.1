@@ -23,7 +23,7 @@ from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from streamlit_folium import st_folium
 
 # ── Page config ─────────────────────────────────────────
-st.set_page_config(page_title="Navigate — N.A.R.I", page_icon="🗺️", layout="wide")
+st.set_page_config(page_title="Navigate - N.A.R.I", page_icon="🗺️", layout="wide")
 
 API_BASE = "http://127.0.0.1:8000"
 IST = ZoneInfo("Asia/Kolkata")
@@ -45,8 +45,8 @@ def geocode_location(query: str) -> tuple[float, float, str] | None:
     geocoder = _get_geocoder()
     search = f"{query.strip()}, Patna, Bihar, India"
     try:
-        #result = geocoder.geocode(search, exactly_one=True)
-        result = geocoder.geocode(f"{search}, Patna, Bihar, India", exactly_one=True)
+        result = geocoder.geocode(search, exactly_one=True)
+        #result = geocoder.geocode(f"{search}, Patna, Bihar, India", exactly_one=True)
     except (GeocoderTimedOut, GeocoderServiceError):
         return None
     if result is None:
