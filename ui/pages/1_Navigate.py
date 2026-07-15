@@ -45,7 +45,8 @@ def geocode_location(query: str) -> tuple[float, float, str] | None:
     geocoder = _get_geocoder()
     search = f"{query.strip()}, Patna, Bihar, India"
     try:
-        result = geocoder.geocode(search, exactly_one=True)
+        #result = geocoder.geocode(search, exactly_one=True)
+        result = geocoder.geocode(f"{search}, Patna, Bihar, India", exactly_one=True)
     except (GeocoderTimedOut, GeocoderServiceError):
         return None
     if result is None:

@@ -50,10 +50,16 @@ def _stamp_safety_costs(
     graph,
     node_safety: dict[int, float],
     m_demo: float,
+    active_hazards: dict[str, float] | None = None,
 ) -> None:
     """Write a `safety_cost` attribute onto every edge in the graph."""
     for u, v, _key, data in graph.edges(keys=True, data=True):
         s_infra = (node_safety.get(u, 0.3) + node_safety.get(v, 0.3)) / 2.0
+        
+        # Determine cells for u and v
+        cell_u = h3.latlng_to_cell(graph.nodes[u]['y'], graph.nodes[u]['x'], H3_RESOLUTION)
+        cell_v = h3.latlng_to_cell(graph.nodes[v]['y'], graph.nodes[v]['x'], H3_RESOLUTION)
+        
         s_total = compute_edge_safety(
             s_infra=s_infra,
             m_demo=m_demo,
@@ -61,6 +67,8 @@ def _stamp_safety_costs(
             news_severity=NEWS_BASELINE,
             alpha=ALPHA,
             beta=BETA,
+            edge_cells=[cell_u, cell_v],
+            active_hazards=active_hazards,
         )
         data["safety_cost"] = safety_to_cost(s_total)
 
@@ -75,15 +83,23 @@ def _path_to_coords(graph, path: list[int]) -> list[Coordinate]:
 
 
 def _avg_path_safety(
+    graph,
     path: list[int],
     node_safety: dict[int, float],
     m_demo: float,
+    active_hazards: dict[str, float] | None = None,
 ) -> float:
     """Compute the average S_total along a path."""
     if not path:
         return 0.0
     scores = [node_safety.get(n, 0.3) for n in path]
     avg_infra = float(np.mean(scores))
+    
+    edge_cells = []
+    for node in path:
+        cell = h3.latlng_to_cell(graph.nodes[node]['y'], graph.nodes[node]['x'], H3_RESOLUTION)
+        edge_cells.append(cell)
+        
     return compute_edge_safety(
         s_infra=avg_infra,
         m_demo=m_demo,
@@ -91,6 +107,8 @@ def _avg_path_safety(
         news_severity=NEWS_BASELINE,
         alpha=ALPHA,
         beta=BETA,
+        edge_cells=edge_cells,
+        active_hazards=active_hazards,
     )
 
 
@@ -109,6 +127,7 @@ async def get_safe_route(payload: RouteRequest, request: Request):
     """
     graph = request.app.state.graph
     node_safety = request.app.state.node_safety
+    active_hazards = getattr(request.app.state, "active_hazards", {})
 
     if graph is None:
         raise HTTPException(status_code=503, detail="Road graph not loaded")
@@ -120,7 +139,7 @@ async def get_safe_route(payload: RouteRequest, request: Request):
     m_demo = get_demographic_multiplier(payload.gender, hour)
 
     # Stamp safety costs onto edges
-    _stamp_safety_costs(graph, node_safety, m_demo)
+    _stamp_safety_costs(graph, node_safety, m_demo, active_hazards)
 
     # Snap origin and destination to nearest graph nodes
     try:
@@ -160,7 +179,7 @@ async def get_safe_route(payload: RouteRequest, request: Request):
     max_allowed = settings.MAX_DETOUR_FACTOR * fastest_distance
 
     fastest_path = paths_by_dist[0]
-    fastest_safety = _avg_path_safety(fastest_path, node_safety, m_demo)
+    fastest_safety = _avg_path_safety(graph, fastest_path, node_safety, m_demo, active_hazards)
 
     best_safest = None
     best_safest_score = -1.0
@@ -171,7 +190,7 @@ async def get_safe_route(payload: RouteRequest, request: Request):
         if dist > max_allowed:
             continue
         candidates_within_budget += 1
-        score = _avg_path_safety(path, node_safety, m_demo)
+        score = _avg_path_safety(graph, path, node_safety, m_demo, active_hazards)
         if score > best_safest_score:
             best_safest_score = score
             best_safest = (path, dist, score)
