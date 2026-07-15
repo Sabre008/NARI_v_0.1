@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from typing import Any
+from functools import lru_cache
 
 
 @dataclass
@@ -19,6 +20,7 @@ class HazardResult:
     severity: float
 
 
+@lru_cache(maxsize=1)
 def load_pipeline() -> tuple[None, Any]:
     """
     Lazy-load Hugging Face NER pipeline.

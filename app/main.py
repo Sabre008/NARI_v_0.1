@@ -21,7 +21,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import routing, news, crowd, users
+from app.routers import routing, crowd, users
 from models.safety_dnn.predict import SafetyPredictor
 from routing.cost_function import compute_edge_safety, safety_to_cost
 from services.demographic import get_demographic_multiplier
@@ -131,7 +131,6 @@ app.add_middleware(
 )
 
 app.include_router(routing.router, prefix="/api/v1", tags=["Routing"])
-app.include_router(news.router, prefix="/api/v1", tags=["News & Hazards"])
 app.include_router(crowd.router, prefix="/api/v1", tags=["Crowdsource"])
 app.include_router(users.router, prefix="/api/v1", tags=["Users"])
 
