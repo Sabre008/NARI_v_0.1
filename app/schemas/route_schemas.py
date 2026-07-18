@@ -15,6 +15,8 @@ class RouteRequest(BaseModel):
     """Payload for POST /route."""
     origin: Coordinate
     destination: Coordinate
+    origin_name: str | None = None
+    dest_name: str | None = None
     gender: str = Field("male", description="User demographic: 'male' or 'female'")
     time_of_day: str | None = Field(
         None,
@@ -59,3 +61,9 @@ class RouteResponse(BaseModel):
     candidates_within_budget: int = 0
     demographic: str | None = None
     m_demo: float | None = None
+    avg_news_penalty: float = 0.0
+    avg_crowd_penalty: float = 0.0
+    route_hazards: list[dict] = Field(
+        default_factory=list,
+        description="List of hazards (news and crowd) actively penalized in this routing calculation"
+    )

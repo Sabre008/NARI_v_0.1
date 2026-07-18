@@ -17,9 +17,11 @@ def compute_edge_safety(
     s_infra: float,
     m_demo: float,
     crowd_decay: float,
-    news_severity: float,
+    news_severity: float = 0.0,
     alpha: float | None = None,
     beta: float | None = None,
+    edge_cells: list[str] | None = None,
+    active_hazards: dict[str, float] | None = None,
 ) -> float:
     """
     Compute the composite safety score for a single graph edge / H3 cell.
@@ -38,6 +40,10 @@ def compute_edge_safety(
         Weight for crowd component. Default from settings.
     beta : float
         Weight for news component. Default from settings.
+    edge_cells: list[str]
+        H3 cells for the current edge's nodes.
+    active_hazards: dict[str, float]
+        Dictionary mapping H3 cell to max active hazard severity.
 
     Returns
     -------
@@ -48,6 +54,12 @@ def compute_edge_safety(
         alpha = settings.ALPHA_CROWD
     if beta is None:
         beta = settings.BETA_NEWS
+
+    if edge_cells and active_hazards:
+        hazard_penalty = 0.0
+        for cell in edge_cells:
+            hazard_penalty = max(hazard_penalty, active_hazards.get(cell, 0.0))
+        news_severity = max(news_severity, hazard_penalty)
 
     s_total = (s_infra * m_demo) + (alpha * crowd_decay) - (beta * news_severity)
 

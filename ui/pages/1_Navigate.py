@@ -23,7 +23,7 @@ from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from streamlit_folium import st_folium
 
 # ── Page config ─────────────────────────────────────────
-st.set_page_config(page_title="Navigate — N.A.R.I", page_icon="🗺️", layout="wide")
+st.set_page_config(page_title="Navigate - N.A.R.I", page_icon="🗺️", layout="wide")
 
 API_BASE = "http://127.0.0.1:8000"
 IST = ZoneInfo("Asia/Kolkata")
@@ -231,15 +231,17 @@ def add_marker(fmap, lat, lng, label, color, icon_name):
 
 
 def add_legend(fmap, gender_label, hour_val, m_demo):
-    """Inject an HTML legend into the map."""
+    """Inject an HTML legend into the map explicitly showing Red/Green meaning."""
     html = f"""
     <div style="position:fixed; bottom:30px; left:30px; z-index:1000;
                 background:white; padding:14px 18px; border-radius:10px;
                 box-shadow:0 2px 12px rgba(0,0,0,0.15); font-size:13px;
-                font-family: 'Segoe UI', sans-serif; line-height:1.6;">
+                font-family: 'Segoe UI', sans-serif; line-height:1.6;
+                border: 1px solid #ddd;">
         <b style="font-size:14px;">N.A.R.I Route Comparison</b><br>
-        <span style="color:#D32F2F;">&#9644;&#9644;</span> Fastest Path<br>
-        <span style="color:#388E3C;">&#9644;&#9644;</span> Safest Path (1.25x constrained)<br>
+        <span style="color:#D32F2F;">&#9644;&#9644;</span> <span style="color:#D32F2F; font-weight:bold;">Red Line: Fastest Path</span><br>
+        <span style="color:#388E3C;">&#9644;&#9644;</span> <span style="color:#388E3C; font-weight:bold;">Green Line: Safest Path</span><br>
+        <hr style="margin: 5px 0;">
         <span style="font-size:11px; color:#666;">
             {gender_label} | {hour_val}:00 IST | M_demo = {m_demo}
         </span>
@@ -265,6 +267,8 @@ if submitted:
     payload = {
         "origin": {"lat": o_lat, "lng": o_lng},
         "destination": {"lat": d_lat, "lng": d_lng},
+        "origin_name": st.session_state.origin_label,
+        "dest_name": st.session_state.dest_label,
         "gender": gender.lower(),
         "time_of_day": f"{hour:02d}:00",
         "k_paths": 10,
@@ -304,6 +308,7 @@ if data is not None:
     demographic = data.get("demographic", "")
     candidates_total = data.get("candidates_evaluated", 0)
     candidates_ok = data.get("candidates_within_budget", 0)
+    route_hazards = data.get("route_hazards", [])
 
     safest_dist = safest["total_distance_m"]
     fastest_dist = fastest["total_distance_m"]
@@ -315,7 +320,7 @@ if data is not None:
 
     # Metrics panel
     st.divider()
-    m1, m2, m3, m4 = st.columns(4)
+    m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric(
         label="Safety Gain (ΔS_total)",
         value=f"+{delta_safety:.4f}" if delta_safety >= 0 else f"{delta_safety:.4f}",
@@ -326,6 +331,13 @@ if data is not None:
     )
     m3.metric(label="Detour Factor", value=f"{detour:.3f}x")
     m4.metric(label="M_demo", value=f"{m_demo:.2f}")
+
+    avg_news = data.get("avg_news_penalty", 0.0)
+    avg_crowd = data.get("avg_crowd_penalty", 0.0)
+    threat_level = avg_news + avg_crowd
+    m5.metric(label="NLP Threat Level", value=f"{threat_level:.2f}")
+
+    st.caption("Algorithm Weights:  **Crowd Weight (α): 0.2**  |  **News Weight (β): 0.3**")
 
     # Comparison table
     st.divider()
@@ -355,6 +367,15 @@ if data is not None:
         f"{candidates_ok} within the 1.25x distance budget. "
         f"Demographic context: {demographic}."
     )
+    
+    # Avoided Hazards Block
+    if route_hazards:
+        st.error("⚠️ **Avoided Hazards:** The algorithm successfully routed you away from the following high-risk zones:")
+        for hz in route_hazards:
+            icon = "📰" if hz.get("type") == "news" else "👥"
+            st.info(f"{icon} **Severity {hz.get('severity', 0.0)}** | {hz.get('description', '')} (Cell: {hz.get('h3_index', '')})")
+    else:
+        st.success("✅ **Threat Intelligence:** Live NLP scan complete. No active news or crowd hazards detected near this route.")
 
     # Route map
     st.divider()

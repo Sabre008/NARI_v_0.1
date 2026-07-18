@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 class HazardEvent(BaseModel):
     """A single detected hazard incident."""
-    centroid_id: int = Field(..., description="Affected H3 hex cell")
+    centroid_id: str = Field(..., description="Affected H3 hex cell")
     severity_score: float = Field(..., ge=0.0, le=1.0)
     description: str
     source_url: str | None = None

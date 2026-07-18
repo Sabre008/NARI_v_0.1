@@ -1,100 +1,89 @@
 """
-NLP Hazard Classification Pipeline
-====================================
-DESIGN.md §2B: Hugging Face zero-shot classification + NER to extract
-incident severity and spatial references from news articles.
-
-Uses a two-stage approach:
-    1. Zero-shot classifier → Is this article about a safety hazard?
-    2. NER → Extract location names from positive articles.
+NLP Hazard Pipeline
+===================
+Loads the dslim/bert-base-NER model and applies keyword heuristics
+to live news headlines to determine severity scores.
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
-
-
-# Candidate labels for zero-shot classification
-HAZARD_LABELS = [
-    "crime",
-    "accident",
-    "flood",
-    "fire",
-    "protest",
-    "construction hazard",
-    "safe / irrelevant",
-]
-
-# Threshold for considering an article as a genuine hazard
-HAZARD_CONFIDENCE_THRESHOLD = 0.45
+from typing import Any
+from functools import lru_cache
 
 
 @dataclass
 class HazardResult:
-    """Structured output from the NLP pipeline."""
     headline: str
-    predicted_label: str
-    confidence: float
     locations: list[str]
-    severity: float  # Normalised 0–1
+    severity: float
 
 
-def load_pipeline():
+@lru_cache(maxsize=1)
+def load_pipeline() -> tuple[None, Any]:
     """
-    Lazy-load Hugging Face pipelines to avoid slow import-time downloads.
-
-    Returns
-    -------
-    tuple
-        (zero_shot_classifier, ner_pipeline)
+    Lazy-load Hugging Face NER pipeline.
+    Zero-shot classifier is replaced by a keyword heuristic.
     """
-    # NOTE: Import here to keep module import fast
     from transformers import pipeline  # type: ignore[import-untyped]
 
-    classifier = pipeline(
-        "zero-shot-classification",
-        model="facebook/bart-large-mnli",
-        device=-1,  # CPU
-    )
-    ner = pipeline(
+    ner_pipeline = pipeline(
         "ner",
         model="dslim/bert-base-NER",
         aggregation_strategy="simple",
         device=-1,
     )
-    return classifier, ner
+    # Return None for classifier to maintain signature compatibility
+    return None, ner_pipeline
+
+
+def compute_severity(headline: str) -> float:
+    """
+    Assign severity score based on regex word boundary keyword matching.
+    """
+    # Regex patterns for whole-word matching to prevent partial matches 
+    # (e.g. avoiding matching "fire" inside "firewall")
+    SEVERITY_TIERS = [
+        (1.0, r'\b(murder|killed|stabbed|bomb|dead|death|shooting|shot)\b'),
+        (0.8, r'\b(fire|accident|robbery|snatching|assault|injured|gutted|crash|rape)\b'),
+        (0.6, r'\b(protest|waterlogging|flood|collapse|blocked|blocks|jam)\b'),
+        (0.4, r'\b(traffic|disruption|delay|roadblock|disrupts|diverted)\b'),
+        (0.2, r'\b(patrol|awareness|drill|advisory|warning)\b'),
+    ]
+
+    text_lower = headline.lower()
+    for score, pattern in SEVERITY_TIERS:
+        if re.search(pattern, text_lower):
+            return score
+    return 0.1  # Baseline for unclassified content
 
 
 def classify_article(
-    text: str,
-    classifier,
-    ner_pipeline,
+    headline: str, 
+    classifier: Any, 
+    ner_pipeline: Any
 ) -> HazardResult | None:
     """
-    Run zero-shot classification and NER on a single article.
-
-    Returns None if the article is classified as safe/irrelevant.
+    Extract locations using BERT NER and score severity using keyword heuristics.
     """
-    # Stage 1: zero-shot classification
-    result = classifier(text, candidate_labels=HAZARD_LABELS)
-    top_label = result["labels"][0]
-    top_score = result["scores"][0]
+    entities = ner_pipeline(headline)
 
-    if top_label == "safe / irrelevant" or top_score < HAZARD_CONFIDENCE_THRESHOLD:
-        return None
-
-    # Stage 2: NER for location extraction
-    entities = ner_pipeline(text)
+    # Filter out broad city/state terms so we only get micro-locations
+    IGNORE_LOCS = {"patna", "bihar", "india"}
     locations = [
-        ent["word"]
-        for ent in entities
-        if ent["entity_group"] == "LOC"
+        ent["word"] for ent in entities 
+        if ent["entity_group"] == "LOC" and ent["word"].lower() not in IGNORE_LOCS
     ]
 
+    # If no locations are found in the headline, it can't be mapped to the routing graph
+    if not locations:
+        return None
+
+    severity = compute_severity(headline)
+
     return HazardResult(
-        headline=text[:120],
-        predicted_label=top_label,
-        confidence=top_score,
+        headline=headline,
         locations=locations,
-        severity=top_score,  # Use confidence as a proxy for severity
+        severity=severity,
     )
