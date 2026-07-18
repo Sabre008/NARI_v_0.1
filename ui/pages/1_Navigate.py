@@ -25,7 +25,7 @@ from streamlit_folium import st_folium
 # ── Page config ─────────────────────────────────────────
 st.set_page_config(page_title="Navigate - N.A.R.I", page_icon="🗺️", layout="wide")
 
-API_BASE = "http://127.0.0.1:8000"
+API_BASE = "https://super-adventure-x5r75p4v45xj3px74-8000.app.github.dev/route"
 IST = ZoneInfo("Asia/Kolkata")
 PATNA_CENTER = (25.6093, 85.1500)
 
@@ -276,7 +276,7 @@ if submitted:
 
     with st.spinner("Computing safest route..."):
         try:
-            resp = requests.post(f"{API_BASE}/api/v1/route", json=payload, timeout=30)
+            resp = requests.post(f"{API_BASE}/api/v1/route", json=payload, timeout=60)
         except requests.ConnectionError:
             st.error(
                 "Cannot connect to the N.A.R.I API. "
