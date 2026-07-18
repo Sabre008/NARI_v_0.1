@@ -25,7 +25,7 @@ from streamlit_folium import st_folium
 # ── Page config ─────────────────────────────────────────
 st.set_page_config(page_title="Navigate - N.A.R.I", page_icon="🗺️", layout="wide")
 
-API_BASE = "https://super-adventure-x5r75p4v45xj3px74-8000.app.github.dev/route"
+API_BASE = "https://super-adventure-x5r75p4v45xj3px74-8000.app.github.dev/api/v1"
 IST = ZoneInfo("Asia/Kolkata")
 PATNA_CENTER = (25.6093, 85.1500)
 
