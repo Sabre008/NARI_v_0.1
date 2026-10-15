@@ -1,5 +1,22 @@
-# ── Environment ─────────────────────────
+# ── Environment & Secrets (Industry Standard Security) ─────
 .env
+.env.*
+!.env.example
+*.env
+.env*.local
+
+# ── Streamlit Secrets & Local Config ──────────────────────
+.streamlit/secrets.toml
+.streamlit/*.local.toml
+
+# ── Certificates & Keys ─────────────────────────────────
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+
+# ── Python / Bytecode ─────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -14,8 +31,9 @@ venv/
 env/
 testvenv/
 
-# ── IDE ─────────────────────────────────
-.vscode/
+# ── IDE & Editors ─────────────────────────────────────────
+.vscode/*
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
@@ -28,13 +46,13 @@ models/trust_engine/*.joblib
 # ── Jupyter ─────────────────────────────
 .ipynb_checkpoints/
 notebooks/.ipynb_checkpoints/
-notebooks/cache
+notebooks/cache/
 
 # ── OS ──────────────────────────────────
 .DS_Store
 Thumbs.db
 
-# ── Data artifacts ──────────────────────
+# ── Data artefacts ──────────────────────
 *.csv
 *.parquet
 data/patna_road_graph.graphml
@@ -42,6 +60,9 @@ data/patna_h3_grid_features.csv
 data/patna_synthetic_training_data.csv
 !data/migrations/*.sql
 
-# ── Notebook Cache ──
-notebooks/cache/
+# ── Backups ────────────────────────────────
 *.bkp
+*.bkp.py
+*.bak
+*.orig
+scratch/

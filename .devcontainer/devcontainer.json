@@ -1,0 +1,29 @@
+{
+  "name": "N.A.R.I (Codespace)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "portsAttributes": {
+    "8000": {
+      "label": "FastAPI Backend API",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    },
+    "8501": {
+      "label": "Streamlit Safety UI",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  },
+  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
+  "remoteUser": "vscode"
+}

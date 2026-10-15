@@ -1,18 +1,7 @@
-"""
-Navigate Page — Route Request & Safety Map
-============================================
-Users search for locations by name (geocoded via Nominatim), click
-the map to set origin/destination, configure demographic context,
-and submit a route request to the FastAPI backend. Results are
-rendered as red (fastest) and green (safest) polylines with a
-metrics panel showing the structural justification for detours.
-
-Run the full platform:
-    Terminal 1:  uvicorn app.main:app --reload
-    Terminal 2:  streamlit run ui/Home.py
-"""
-
+import os
+import sys
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import folium
@@ -22,17 +11,56 @@ from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 from streamlit_folium import st_folium
 
-# ── Page config ─────────────────────────────────────────
-st.set_page_config(page_title="Navigate - N.A.R.I", page_icon="🗺️", layout="wide")
+# Ensure project root is available for imports
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-API_BASE = "http://127.0.0.1:8000"
+import importlib
+import app.config
+importlib.reload(app.config)
+from app.config import settings
+
+
+def _resolve_environment_label() -> str:
+    """Safe fallback for environment label."""
+    if hasattr(settings, "get_environment_label"):
+        try:
+            return settings.get_environment_label()
+        except Exception:
+            pass
+    if os.getenv("CODESPACE_NAME"):
+        return f"GitHub Codespace ({os.getenv('CODESPACE_NAME')})"
+    return "Localhost Development"
+
+
+def _resolve_backend_api() -> str:
+    """Safe fallback for backend API base URL."""
+    if hasattr(settings, "get_api_url"):
+        try:
+            return settings.get_api_url()
+        except Exception:
+            pass
+    override = os.getenv("API_URL") or os.getenv("API_BASE") or os.getenv("NARI_API_URL")
+    if override:
+        return override.rstrip("/").removesuffix("/api/v1")
+    codespace = os.getenv("CODESPACE_NAME")
+    if codespace:
+        domain = os.getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "app.github.dev")
+        return f"https://{codespace}-8000.{domain}"
+    return "http://127.0.0.1:8000"
+
+
+# ── Page config ─────────────────────────────────────────
+st.set_page_config(page_title="NARI Navigation", page_icon="🗺️", layout="wide")
+
 IST = ZoneInfo("Asia/Kolkata")
 PATNA_CENTER = (25.6093, 85.1500)
 
 # ── Geocoder ────────────────────────────────────────────
 @st.cache_resource
 def _get_geocoder():
-    return Nominatim(user_agent="NARI_Patna_App", timeout=5)
+    return Nominatim(user_agent="NARI_Safe_Navigation_Platform/1.0 (Patna, Bihar)", timeout=5)
 
 
 def geocode_location(query: str) -> tuple[float, float, str] | None:
@@ -81,7 +109,7 @@ if not gender_from_profile:
     profile_gender = "female"
 
 
-# ── Sidebar ─────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────
 with st.sidebar:
     st.title("🧭 N.A.R.I")
     st.caption("Navigation Aiding Reinforced Informatics")
@@ -198,19 +226,33 @@ with st.sidebar:
         disabled=not both_ready,
     )
 
+    st.divider()
+    with st.expander("🌐 System & Network Status", expanded=False):
+        current_env = _resolve_environment_label()
+        resolved_api = _resolve_backend_api()
+        st.caption(f"**Runtime Environment:** {current_env}")
+        st.caption(f"**Detected Backend:** `{resolved_api}`")
+        custom_endpoint = st.text_input(
+            "API Base Override (Optional)",
+            value=st.session_state.get("custom_api_url", ""),
+            placeholder="Leave empty to use auto-detected URL",
+            help="Useful if routing through an external tunnel, proxy, or Codespace URL.",
+            key="custom_api_override_input",
+        )
+        if custom_endpoint != st.session_state.get("custom_api_url"):
+            st.session_state["custom_api_url"] = custom_endpoint.strip()
+
 
 # ── Helper functions ────────────────────────────────────
 def build_map(center_lat, center_lng, zoom=13):
-    """Create a base Folium map."""
     return folium.Map(
         location=[center_lat, center_lng],
         zoom_start=zoom,
-        tiles="CartoDB positron",
+        tiles="OpenStreetMap",
     )
 
 
 def draw_path(fmap, coords, color, label, weight=5, opacity=0.85):
-    """Draw a polyline from a list of {lat, lng} dicts."""
     points = [(c["lat"], c["lng"]) for c in coords]
     folium.PolyLine(
         locations=points,
@@ -222,7 +264,6 @@ def draw_path(fmap, coords, color, label, weight=5, opacity=0.85):
 
 
 def add_marker(fmap, lat, lng, label, color, icon_name):
-    """Place a marker on the map."""
     folium.Marker(
         location=[lat, lng],
         popup=label,
@@ -251,7 +292,7 @@ def add_legend(fmap, gender_label, hour_val, m_demo):
 
 
 # ── Main content area ──────────────────────────────────
-st.header("🗺️ Navigate — Find Your Safest Route")
+st.header("🗺️ Navigate: Find Your Safest Route")
 
 # ── API call on submit ─────────────────────────────────
 if submitted:
@@ -274,19 +315,24 @@ if submitted:
         "k_paths": 10,
     }
 
+    active_base = st.session_state.get("custom_api_url") or _resolve_backend_api()
+    clean_base = active_base.rstrip("/").removesuffix("/api/v1")
+    route_url = f"{clean_base}/api/v1/route"
+
     with st.spinner("Computing safest route..."):
         try:
-            resp = requests.post(f"{API_BASE}/api/v1/route", json=payload, timeout=30)
+            resp = requests.post(route_url, json=payload, timeout=90)
         except requests.ConnectionError:
             st.error(
-                "Cannot connect to the N.A.R.I API. "
-                "Ensure the FastAPI server is running: `uvicorn app.main:app --reload`"
+                f"**Connection Failed:** Cannot reach the N.A.R.I Routing Engine at `{route_url}`.\n\n"
+                "• **Localhost?** Verify FastAPI is running: `uvicorn app.main:app --reload`\n"
+                "• **GitHub Codespaces?** Confirm the backend is running and port `8000` is set to **Public** in the Ports panel."
             )
             st.stop()
 
     if resp.status_code != 200:
         detail = resp.json().get("detail", resp.text) if resp.headers.get("content-type", "").startswith("application/json") else resp.text
-        st.error(f"API error ({resp.status_code}): {detail}")
+        st.error(f"Routing API error ({resp.status_code}) from `{route_url}`: {detail}")
         st.stop()
 
     data = resp.json()

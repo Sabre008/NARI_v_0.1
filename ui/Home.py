@@ -28,8 +28,15 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.title("🧭 N.A.R.I — Safe Navigation")
+st.title("🧭 NARI: Safe Navigation")
 st.markdown("**Infrastructure-aware safety navigation for Patna, India.**")
+
+if settings.SUPABASE_URL.startswith("https://placeholder") or settings.SUPABASE_KEY == "placeholder-key":
+    st.warning(
+        "⚠️ **Supabase credentials not configured.** "
+        "Please set `SUPABASE_URL` and `SUPABASE_KEY` in your `.env` file "
+        "or GitHub Codespaces Secrets to enable authentication and database operations."
+    )
 
 if "user_id" in st.session_state:
     st.success("Successfully authenticated!")
