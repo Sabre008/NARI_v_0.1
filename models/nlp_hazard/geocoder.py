@@ -1,7 +1,7 @@
 """
-Geocoder — Map NER-extracted location text to H3 cells
+Geocoder: Map NER-extracted location text to H3 cells
 =======================================================
-DESIGN.md §2B: Converts location strings (e.g., "Kankarbagh", "Gandhi Maidan")
+Converts location strings (e.g., "Kankarbagh", "Gandhi Maidan")
 to H3 centroid_ids for penalty application.
 
 Strategy:

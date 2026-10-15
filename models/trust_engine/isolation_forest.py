@@ -1,7 +1,7 @@
 """
 Isolation Forest Anomaly Detection for Crowd Reports
 ======================================================
-DESIGN.md §2C: Unsupervised model to identify spam/malicious reports
+Unsupervised model to identify spam/malicious reports
 based on account history and submission velocity.
 
 Features used for anomaly detection:

@@ -1,7 +1,7 @@
 """
 Time-Decay Rating Computation
 ===============================
-DESIGN.md §2C:  W_report = Rating · e^(−λt)
+W_report = Rating · e^(−λt)
 
 Verified crowd ratings naturally diminish over time so that stale
 reports don't permanently skew the safety score.
