@@ -1,5 +1,5 @@
 """
-N.A.R.I — Streamlit Home Page / Authentication Gateway
+N.A.R.I: Streamlit Home Page / Authentication Gateway
 ======================================================
 Landing page providing Email/Password Login and Sign-Up via Supabase.
 Upon login, sets user_id, access_token, and user_gender in session_state,
@@ -22,7 +22,7 @@ def init_supabase() -> Client:
 supabase = init_supabase()
 
 st.set_page_config(
-    page_title="N.A.R.I — Authentication",
+    page_title="N.A.R.I: Authentication",
     page_icon="🧭",
     layout="centered",
     initial_sidebar_state="expanded",
