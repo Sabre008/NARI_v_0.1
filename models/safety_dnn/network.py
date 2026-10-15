@@ -1,7 +1,7 @@
 """
 SafetyNet — PyTorch MLP for Infrastructure Safety Scoring
 ===========================================================
-DESIGN.md §2A: DNN Regression Model applied to H3 hexagonal grid cells.
+DNN Regression Model applied to H3 hexagonal grid cells.
 
 Architecture:
     Input  →  infrastructure feature vector (hospitals, streetlights,

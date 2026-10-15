@@ -1,7 +1,7 @@
 """
 News Feed Scraper
 ==================
-DESIGN.md §2B: Scrapes local public data / news feeds for Patna.
+Scrapes local public data / news feeds for Patna.
 
 Supports RSS/Atom feeds via `feedparser`.
 """

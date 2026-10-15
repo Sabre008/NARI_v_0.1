@@ -1,5 +1,5 @@
 """
-About Page — Project Information
+About Page: Project Information
 ==================================
 Explains the N.A.R.I methodology, mathematical formulation,
 and tech stack.
@@ -7,7 +7,7 @@ and tech stack.
 
 import streamlit as st
 
-st.set_page_config(page_title="About — N.A.R.I", page_icon="ℹ️", layout="wide")
+st.set_page_config(page_title="About: N.A.R.I", page_icon="ℹ️", layout="wide")
 
 st.header("ℹ️ About N.A.R.I")
 

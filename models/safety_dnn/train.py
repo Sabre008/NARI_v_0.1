@@ -1,7 +1,7 @@
 """
 SafetyNet Training Loop
 ========================
-DESIGN.md §2A: Pre-trained on synthetic data, fine-tuned with verified reports.
+Pre-trained on synthetic data, fine-tuned with verified reports.
 
 Usage (from project root):
     python -m models.safety_dnn.train --epochs 100 --lr 0.001

@@ -1,5 +1,5 @@
 """
-Report Page — Crowdsourced Safety Ratings
+Report Page: Crowdsourced Safety Ratings
 ==========================================
 Users submit a safety rating (1-5) for a location.
 The rating is verified by the Isolation Forest trust engine.

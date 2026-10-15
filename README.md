@@ -1,16 +1,19 @@
-# 🧭 N.A.R.I — Navigation Aiding Reinforced Informatics
+# N.A.R.I: Navigation Aiding Reinforced Informatics
 
-> Infrastructure-aware safety navigation engine for Patna, India.
+> An experimental, infrastructure-aware routing prototype tested on Patna, Bihar.
 
 ## Overview
 
-N.A.R.I combines deep learning, NLP, and constrained graph routing to provide
-safe urban navigation. It scores geographic areas by infrastructure density,
-adjusts for demographics and time-of-day, and integrates real-time news hazards
-and verified crowdsourced reports.
+N.A.R.I is an exploratory project attempting to incorporate urban infrastructure density, user demographic context, live news-extracted incidents, and crowdsourced feedback into route calculation. Standard navigation engines primarily focus on travel time and shortest distance. This prototype investigates how safety considerations might be weighted alongside distance.
 
-See [`DESIGN.md`](DESIGN.md) for the full architecture and mathematical
-formulation.
+### Research and Current Stage
+
+This project is in an early experimental stage:
+- **Proof of Concept**: The platform is currently a research prototype evaluated on Patna, Bihar to see if multi-source safety signals can practically influence graph traversal.
+- **Ongoing Research Needed**: Significant empirical research is still required. The safety scoring formulas, demographic multipliers, and synthetic training data are preliminary hypotheses and approximations rather than definitive ground truth.
+- **Not a Production Safety System**: Route suggestions are experimental explorations of cost functions and should not be relied upon as absolute safety guarantees.
+
+Further documentation on the methodology and formulations can be reviewed on the in-app **About** page (`ui/pages/4_About.py`).
 
 ---
 
@@ -30,7 +33,7 @@ pip install -r requirements.txt
 
 ```bash
 copy .env.example .env
-# Edit .env with your Supabase credentials
+# Edit .env with your Supabase credentials if using auth and report submission
 ```
 
 ### 3. Run the Backend (FastAPI)
@@ -52,12 +55,12 @@ streamlit run ui/Home.py
 ```
 NARI_v_0.1/
 ├── app/          # FastAPI backend (routers, schemas, config)
-├── models/       # AI/ML modules (DNN, NLP, Trust Engine)
-├── routing/      # Constrained routing engine (Yen's KSP)
-├── services/     # Business logic orchestration
-├── data/         # Supabase data layer & CRUD
-├── ui/           # Streamlit multi-page frontend
-├── notebooks/    # Research & prototyping
+├── models/       # Experimental models (DNN, NLP, Trust Engine)
+├── routing/      # Routing logic and cost functions (Yen's KSP)
+├── services/     # Scoring and demographic utilities
+├── data/         # Supabase client, migrations, and local graph cache
+├── ui/           # Streamlit interface
+├── notebooks/    # Exploratory notebooks
 └── tests/        # Test suite
 ```
 
@@ -65,18 +68,18 @@ NARI_v_0.1/
 
 ## Tech Stack
 
-| Layer        | Technology                |
-|--------------|---------------------------|
-| Frontend     | Streamlit + Folium        |
-| Backend API  | FastAPI + Uvicorn         |
-| Database     | Supabase (PostgreSQL)     |
-| DNN          | PyTorch                   |
-| NLP          | Hugging Face Transformers |
-| Geospatial   | OSMnx + H3 + NetworkX    |
-| Anomaly Det. | scikit-learn              |
+| Layer | Technology |
+|---|---|
+| Frontend | Streamlit, Folium |
+| Backend API | FastAPI, Uvicorn |
+| Database | Supabase (PostgreSQL) |
+| DNN | PyTorch |
+| NLP | Hugging Face Transformers |
+| Geospatial | OSMnx, H3, NetworkX |
+| Anomaly Detection | scikit-learn |
 
 ---
 
-## License
+## License and Disclaimer
 
-This project is developed for academic purposes.
+Developed for academic and experimental research purposes.
